@@ -1,6 +1,6 @@
-/* CSS */
+@import url(font-awesome.min.css);
+@import url("https://fonts.googleapis.com/css?family=Pacifico|Source+Sans+Pro:200,400");
 
-/* Reset CSS */
 * {
     margin: 0;
     padding: 0;
@@ -35,6 +35,13 @@
   .bold {
     font-weight: bold;
     color: rgb(251, 244, 166);
+  }
+
+  label {
+    display: block;
+    font-size: 0.9em;
+    font-weight: 400;
+    margin: 0 0 1em 0;
   }
 
   /* Banner styles */
@@ -147,8 +154,54 @@
     margin-bottom: 10px;
   }
 
-  .image-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center
-  }
+.image-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center
+}
+
+
+/* Footer */
+#footer {
+  text-align: center; /* alignment of the whole footer */
+  margin: auto;
+  width: var(--content-width);
+  font-family: FontAwesome;
+  font-style: normal;
+  font-weight: normal;
+}
+
+#footer:before {
+  content: '';
+  display: inline-block;
+  width: 6em;
+  height: 2px;
+  margin-bottom: 4em;
+}
+
+#footer .copyright {
+  font-size: 0.8em;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+/* Icon */
+
+ul.icons {
+  cursor: default;
+  list-style: none;
+  padding-left: 0;
+}
+
+ul.icons li {
+  display: inline-block;
+  padding: 0 1em 20px 0;
+}
+
+ul.icons li:last-child {
+  padding-right: 0;
+}
+
+.icon > .label {
+  display: none; /* Removes the text of hyperlinks */
+}

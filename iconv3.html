@@ -1,81 +1,34 @@
 <!DOCTYPE html>
-<html>
-<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>ICON V3 Screenshots</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: Arial;
-}
-
-/* The grid: Four equal columns that floats next to each other */
-.column {
-  float: left;
-  width: 12%;
-  padding: 2px;
-}
-
-/* Style the images inside the grid */
-.column img {
-  opacity: 0.8; 
-  cursor: pointer; 
-}
-
-.column img:hover {
-  opacity: 1;
-}
-
-/* Clear floats after the columns */
-.row:after {
-  content: "";
-  display: table;
-  clear: both;
-}
-
-/* The expanding image container */
-.container {
-  position: relative;
-  display: none;
-}
-
-/* Expanding image text */
-#imgtext {
-  position: absolute;
-  bottom: 15px;
-  left: 15px;
-  color: black;
-  font-size: 20px;
-}
-
-/* Closable button inside the expanded image */
-.closebtn {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  color: black;
-  font-size: 35px;
-  cursor: pointer;
-}
-</style>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projects - Kasra Babaei</title>
+  <link rel="stylesheet" href="assets/css/grid.css">
+  <link rel="stylesheet" href="assets/css/swift.css">
 </head>
 <body>
-
-<div style="text-align:center">
-    <!--
-  <h2>Tabbed Image Gallery</h2>
-  <p>Click on the images below:</p>
-  -->
-</div>
+  <header id="banner">
+    <div class="inner">
+        <div class="left">
+            <nav>
+                <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="projects.html">Projects</a></li>
+                </ul>
+            </nav>
+        </div>
+        <div class="right">
+            <h2>Kasra Babaei</h2>
+        </div>
+    </div>
+</header>
+<hr>
 
 <!-- The four columns -->
 <div class="row" style="text-align:center">
   <div class="column">
-    <img src="/images/ICON_V3/1.jpg" alt="Home" style="height:15vh" onclick="myFunction(this);">
+    <img src="images/ICON_V3/1.jpg" alt="Home" style="height:15vh" onclick="myFunction(this);">
   </div>
 </div>
 
@@ -93,6 +46,19 @@ function myFunction(imgs) {
   expandImg.parentElement.style.display = "block";
 }
 </script>
+
+<!-- Footer -->
+<footer id="footer">
+  <ul class="icons">
+      <li><a href="https://twitter.com/kasra0000" class="icon fa-twitter"><span class="label">Twitter</span></a></li>
+      <li><a href="https://www.linkedin.com/in/kasra-babaei-5a44b286/" class="icon fa-linkedin"><span class="label">LinkedIn</span></a></li>
+      <li><a href="kasrababaei[at]gmail.com" class="icon fa-envelope"><span class="label">Email</span></a></li>
+  </ul>
+  <ul style="list-style-type:none">
+      <li>Current location: Calgary, Canada</li>
+  </ul>
+  <p class="copyright">&copy; 2024 Kasra Babaei.</p>
+</footer>
 
 </body>
 </html>
