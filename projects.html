@@ -133,12 +133,19 @@
     <ul class="icons">
         <li><a href="https://twitter.com/kasra0000" class="icon fa-twitter"><span class="label">Twitter</span></a></li>
         <li><a href="https://www.linkedin.com/in/kasra-babaei-5a44b286/" class="icon fa-linkedin"><span class="label">LinkedIn</span></a></li>
-        <li><a href="kasrababaei[at]gmail.com" class="icon fa-envelope"><span class="label">Email</span></a></li>
+        <li><a href="#" onclick="sendEmail(); return false;" class="icon fa-envelope"><span class="label">Email</span></a></li>
     </ul>
     <ul style="list-style-type:none">
         <li>Current location: Calgary, Canada</li>
     </ul>
     <p class="copyright">&copy; 2024 Kasra Babaei.</p>
   </footer>
+
+  <script>
+    function sendEmail() {
+        var emailAddress = "kasrababaei@gmail.com";
+        window.location.href = "mailto:" + emailAddress;
+    }
+</script>
 </body>
 </html>
