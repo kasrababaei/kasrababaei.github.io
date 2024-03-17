@@ -23,7 +23,7 @@
   
   #content {
     max-width: var(--content-width);
-    min-width: v(--content-min-width);
+    min-width: var(--content-min-width);
     text-align: left;
     margin: 0 auto;
     margin-top: 20px;
@@ -54,7 +54,7 @@
   
   #banner .inner {
     max-width: var(--content-width);
-    min-width: v(--content-min-width);
+    min-width: var(--content-min-width);
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
@@ -115,7 +115,7 @@
 /* App container styles */
 .app-container {
     max-width: var(--content-width);
-    min-width: v(--content-min-width);
+    min-width: var(--content-min-width);
     margin: 0 auto;
     margin-top: 20px;
     margin-bottom: 20px;
@@ -170,7 +170,7 @@
   text-align: center; /* alignment of the whole footer */
   margin: auto;
   max-width: var(--content-width);
-  min-width: v(--content-min-width);
+  min-width: var(--content-min-width);
   font-family: FontAwesome;
   font-style: normal;
   font-weight: normal;
