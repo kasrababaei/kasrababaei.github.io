@@ -7,7 +7,8 @@
   }
   
   :root {
-    --content-width: 30%;
+    --content-width: 700px;
+    --content-min-width: 500px;
     --content-color: #ffffff;
   }
   
@@ -23,6 +24,8 @@
   }
   
   #content {
+    max-width: var(--content-width);
+    min-width: var(--content-min-width);
     flex: 1;
     width: var(--content-width);
     text-align: left;
@@ -54,7 +57,8 @@
   }
   
   #banner .inner {
-    width: var(--content-width);
+    max-width: var(--content-width);
+    min-width: var(--content-min-width);
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
@@ -96,7 +100,7 @@
   hr {
     border: none;
     border-top: 1px solid #b6b6b6;
-    width: var(--content-width);
+    max-width: var(--content-width);
     margin: 0 auto;
   }
   
@@ -114,7 +118,8 @@
 
 /* App container styles */
 .app-container {
-    width: var(--content-width);
+    max-width: var(--content-width);
+    min-width: var(--content-min-width);
     margin: 0 auto;
     margin-top: 20px;
     margin-bottom: 20px;
@@ -210,4 +215,11 @@ ul.icons li:last-child {
 .phone-image {
   float: right;
   max-width: 15em;
+}
+
+/* Media query for mobile devices */
+@media screen and (max-width: 767px) {
+  :root {
+    /* Override max-width for mobile devices */
+    --content-width: 100%;
 }
