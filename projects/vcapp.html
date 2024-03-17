@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Projects - Kasra Babaei</title>
-  <link rel="stylesheet" href="assets/css/grid.css">
-  <link rel="stylesheet" href="assets/css/swift.css">
+  <link rel="stylesheet" href="../assets/css/grid.css">
+  <link rel="stylesheet" href="../assets/css/swift.css">
 </head>
 <body>
   <header id="banner">
@@ -13,8 +13,8 @@
         <div class="left">
             <nav>
                 <ul>
-                <li><a href="index.html">Home</a></li>
-                <li><a href="projects.html">Projects</a></li>
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../projects.html#app-vc">Projects</a></li>
                 </ul>
             </nav>
         </div>
@@ -28,19 +28,19 @@
 <!-- The four columns -->
 <div class="row" style="text-align:center">
   <div class="column">
-    <img src="images/VC/1.jpg" alt="Home" style="height:20vh" onclick="myFunction(this);">
+    <img src="../images/VC/1.jpg" alt="Home" style="height:20vh" onclick="myFunction(this);">
   </div>
   <div class="column">
-    <img src="images/VC/2.jpg" alt="Tiles" style="height:20vh" onclick="myFunction(this);">
+    <img src="../images/VC/2.jpg" alt="Tiles" style="height:20vh" onclick="myFunction(this);">
   </div>
   <div class="column">
-    <img src="images/VC/3.jpg" alt="Single_tile_details" style="height:20vh" onclick="myFunction(this);">
+    <img src="../images/VC/3.jpg" alt="Single_tile_details" style="height:20vh" onclick="myFunction(this);">
   </div>
   <div class="column">
-    <img src="images/VC/4.jpg" alt="Favourites" style="height:20vh" onclick="myFunction(this);">
+    <img src="../images/VC/4.jpg" alt="Favourites" style="height:20vh" onclick="myFunction(this);">
   </div>
   <div class="column">
-    <img src="images/VC/5.jpg" alt="ContactUs" style="height:20vh" onclick="myFunction(this);">
+    <img src="../images/VC/5.jpg" alt="ContactUs" style="height:20vh" onclick="myFunction(this);">
   </div>
 </div>
 
@@ -63,13 +63,19 @@ function myFunction(imgs) {
   <ul class="icons">
       <li><a href="https://twitter.com/kasra0000" class="icon fa-twitter"><span class="label">Twitter</span></a></li>
       <li><a href="https://www.linkedin.com/in/kasra-babaei-5a44b286/" class="icon fa-linkedin"><span class="label">LinkedIn</span></a></li>
-      <li><a href="kasrababaei[at]gmail.com" class="icon fa-envelope"><span class="label">Email</span></a></li>
-  </ul>
-  <ul style="list-style-type:none">
-      <li>Current location: Calgary, Canada</li>
-  </ul>
-  <p class="copyright">&copy; 2024 Kasra Babaei.</p>
-</footer>
+      <li><a href="#" onclick="sendEmail(); return false;" class="icon fa-envelope"><span class="label">Email</span></a></li>
+    </ul>
+    <ul style="list-style-type:none">
+        <li>Current location: Calgary, Canada</li>
+    </ul>
+    <p class="copyright">&copy; 2024 Kasra Babaei.</p>
+  </footer>
 
+  <script>
+    function sendEmail() {
+        var emailAddress = "kasrababaei@gmail.com";
+        window.location.href = "mailto:" + emailAddress;
+    }
+</script>
 </body>
 </html>
