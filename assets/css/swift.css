@@ -215,9 +215,8 @@ ul.icons li:last-child {
   max-width: 15em;
 }
 
-/* Media query for mobile devices */
 @media screen and (max-width: 800px) {
-  .root {
+  :root {
     max-width: -webkit-calc(800px - (30px));
     max-width: calc(800px - (30px));
   }
