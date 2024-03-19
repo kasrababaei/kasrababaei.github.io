@@ -7,8 +7,8 @@
   }
   
   :root {
-    --content-width: 700px;
-    --content-min-width: 500px;
+    --content-width: -webkit-calc(800px - (30px * 2));
+    --content-width: calc(800px - 30px * 2);
     --content-color: #ffffff;
   }
   
@@ -58,7 +58,6 @@
   
   #banner .inner {
     max-width: var(--content-width);
-    min-width: var(--content-min-width);
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
@@ -119,7 +118,6 @@
 /* App container styles */
 .app-container {
     max-width: var(--content-width);
-    min-width: var(--content-min-width);
     margin: 0 auto;
     margin-top: 20px;
     margin-bottom: 20px;
@@ -218,8 +216,9 @@ ul.icons li:last-child {
 }
 
 /* Media query for mobile devices */
-@media screen and (max-width: 767px) {
-  :root {
-    /* Override max-width for mobile devices */
-    --content-width: 100%;
+@media screen and (max-width: 800px) {
+  .root {
+    max-width: -webkit-calc(800px - (30px));
+    max-width: calc(800px - (30px));
+  }
 }
