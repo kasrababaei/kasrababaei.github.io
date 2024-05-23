@@ -5,8 +5,8 @@
      box-sizing: border-box;
 }
  :root {
-     --content-max-width: 95vw;
-     --content-width: 800px;
+     --content-max-width: 90vw;
+     --content-width: min(90vw, 800px);
      --content-color: #ffffff;
 }
 /* Body styles */
