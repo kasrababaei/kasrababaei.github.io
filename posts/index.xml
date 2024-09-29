@@ -2,18 +2,18 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on Code &amp; Craft by Kasra</title>
-    <link>http://localhost:1313/posts/</link>
+    <link>https://kasrababaei.com/posts/</link>
     <description>Recent content in Posts on Code &amp; Craft by Kasra</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 28 Sep 2024 11:00:43 -0600</lastBuildDate>
-    <atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 28 Sep 2024 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://kasrababaei.com/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Log Git Commands</title>
-      <link>http://localhost:1313/posts/log-git-commands/</link>
-      <pubDate>Sat, 28 Sep 2024 11:00:43 -0600</pubDate>
-      <guid>http://localhost:1313/posts/log-git-commands/</guid>
-      <description>&lt;p&gt;Kepp a log of all your &lt;code&gt;git&lt;/code&gt; commands&lt;/p&gt;</description>
+      <title>Adding a System-Wide Git Logger on macOS</title>
+      <link>https://kasrababaei.com/posts/log-git-commands/</link>
+      <pubDate>Sat, 28 Sep 2024 00:00:00 +0000</pubDate>
+      <guid>https://kasrababaei.com/posts/log-git-commands/</guid>
+      <description>&lt;p&gt;Git is both simple and, at times, complicated. While it&amp;rsquo;s initially encouraged to use the command line instead of apps like &lt;a href=&#34;https://www.git-tower.com&#34;&gt;Tower&lt;/a&gt; or &lt;a href=&#34;https://git-fork.com&#34;&gt;Fork&lt;/a&gt;, which offer a user-friendly interface, these apps can sometimes boost productivity. For instance, they provide a visual representation of branches and convenient ways to perform tasks like cloning, pulling, cherry-picking, and rebasing. However, not all of them offer a log or console to monitor the Git commands being executed behind the scenes.&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>

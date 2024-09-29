@@ -1,24 +1,26 @@
 <!DOCTYPE html>
 <html lang="en-us">
-<script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><title>Log Git Commands | Code &amp; Craft by Kasra</title>
+<title>Adding a System-Wide Git Logger on macOS | Code &amp; Craft by Kasra</title>
 <meta charset="utf-8">
 <meta name="generator" content="Hugo 0.135.0">
-<meta name="description" content="A collection of insights, code snippets, and lessons learned from real-world iOS development.">
+<meta name="description" content="This article shows how to intercept and log Git commands executed by applications on macOS, even those like the Tower app that hide their Git actions. It covers setting up a &#34;git wrapper&#34; script to log commands and delegate them to the original Git binary, giving developers full visibility without affecting workflow.">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="http://localhost:1313/css/index.css">
-<link rel="canonical" href="http://localhost:1313/posts/log-git-commands/">
+<link rel="stylesheet" href="https://kasrababaei.com/css/index.css">
+<link rel="canonical" href="https://kasrababaei.com/posts/log-git-commands/">
 <link rel="alternate" type="application/rss+xml" href="" title="Code &amp; Craft by Kasra">
 
 <header>
   
-    <a href="http://localhost:1313/" class="title">Code &amp; Craft by Kasra</a>
+    <a href="https://kasrababaei.com/" class="title">Code &amp; Craft by Kasra</a>
   
   
     <nav>
     
+      <a href="/">Blogs</a>
+    
       <a href="/projects/">Projects</a>
     
-      <a href="/about/">About</a>
+      <a href="/about/">About Me</a>
     
     </nav>
   
@@ -26,10 +28,69 @@
 
 <article>
   <header>
-    <h1>Log Git Commands</h1>
-    <time datetime="2024-09-28T11:00:43-06:00">September 28, 2024</time>
+    <h1>Adding a System-Wide Git Logger on macOS</h1>
+    <time datetime="2024-09-28T00:00:00Z">September 28, 2024</time>
   </header>
-  <p>Kepp a log of all your <code>git</code> commands</p>
+  <p>Git is both simple and, at times, complicated. While it&rsquo;s initially encouraged to use the command line instead of apps like <a href="https://www.git-tower.com">Tower</a> or <a href="https://git-fork.com">Fork</a>, which offer a user-friendly interface, these apps can sometimes boost productivity. For instance, they provide a visual representation of branches and convenient ways to perform tasks like cloning, pulling, cherry-picking, and rebasing. However, not all of them offer a log or console to monitor the Git commands being executed behind the scenes.</p>
+<p>A couple of years ago, I started using Tower, and it has <em>almost</em> replaced <a href="https://en.wikipedia.org/wiki/Terminal_(macOS)">Terminal</a> for me. I say <em>almost</em> because there are still a few things that Tower doesn&rsquo;t offer, but that&rsquo;s beyond the scope of this article. After reading and following steps in this article, you&rsquo;ll have a folder containing a log of all the Git commands executed by any app on your system. Here&rsquo;s a glimpse of my logs, which shows even what commands <a href="https://ohmyz.sh">oh-my-zsh</a> is running:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-zsh" data-lang="zsh"><span style="display:flex;"><span>2024-09-27-20:32:36 git status -z -uall
+</span></span><span style="display:flex;"><span>2024-09-27-20:32:36 git rev-parse refs/remotes/origin/main
+</span></span><span style="display:flex;"><span>2024-09-27-20:32:36 git <span style="color:#66d9ef">for</span>-each-ref --ignore-case refs/heads/master refs/remotes/master
+</span></span><span style="display:flex;"><span>2024-09-27-20:32:36 git <span style="color:#66d9ef">for</span>-each-ref --ignore-case refs/heads/main refs/remotes/main
+</span></span><span style="display:flex;"><span>2024-09-27-20:32:36 git config --local branch.main.vscode-merge-base
+</span></span><span style="display:flex;"><span>2024-09-28-18:29:25 git status --porcelain --ignore-submodules<span style="color:#f92672">=</span>dirty
+</span></span><span style="display:flex;"><span>2024-09-28-18:29:29 git commit -m Adding a System-Wide Git Logger on macOS
+</span></span><span style="display:flex;"><span>2024-09-28-18:29:29 git rev-parse --verify --quiet HEAD
+</span></span><span style="display:flex;"><span>2024-09-28-18:29:29 git rev-parse --git-dir
+</span></span><span style="display:flex;"><span>2024-09-28-18:29:29 git config --get oh-my-zsh.hide-status
+</span></span></code></pre></div><h3 id="locate-the-path-of-the-git-executable">Locate the path of the git executable</h3>
+<p>macOS doesn&rsquo;t come with a built-in version of Git; however, if you&rsquo;re reading this article, chances are you&rsquo;ve already installed it. If you installed it some time ago and are unsure of the path to the Git executable on your system, simply run:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>which git
+</span></span></code></pre></div><p>In many cases, the path will be either <code>/usr/bin/git</code> or a different location, such as the path for Homebrew (likely <code>/opt/homebrew/bin/git</code>). Note that apps like Tower also install their own Git executable, which can be found in:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>/Applications/Tower.app/Contents/Resources/git/bin
+</span></span></code></pre></div><p>It is important to ensure that Tower is configured to use the executable specified in your <code>PATH</code>.</p>
+<h3 id="create-a-git-logger">Create a Git Logger</h3>
+<p>I have many scripts, personally prefer to place all of them in <code>~/.scripts/</code>. The directory you prefer to keep your scripts is up to you; however, the following steps assume it is the same as mine. We will create the following script:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>set -e
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Get the directory where the script is located</span>
+</span></span><span style="display:flex;"><span>DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span> cd <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span> dirname <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>BASH_SOURCE[0]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> &gt;/dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span> <span style="color:#f92672">&amp;&amp;</span> pwd <span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Create a folder.</span>
+</span></span><span style="display:flex;"><span>LOG_FOLDER<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;git-logs&#34;</span>
+</span></span><span style="display:flex;"><span>mkdir -p <span style="color:#e6db74">&#34;</span>$DIR<span style="color:#e6db74">/</span>$LOG_FOLDER<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Date is used as a prefix for the log file.</span>
+</span></span><span style="display:flex;"><span>DATE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>TZ<span style="color:#f92672">=</span>America/Edmonton date <span style="color:#e6db74">&#39;+%Y-%m-%d&#39;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set the log file path</span>
+</span></span><span style="display:flex;"><span>LOG_FILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$DIR<span style="color:#e6db74">/</span>$LOG_FOLDER<span style="color:#e6db74">/</span>$DATE<span style="color:#e6db74">.log&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Create a `$DATE.log` file if it doesn&#39;t exists.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -f <span style="color:#e6db74">&#34;</span>$LOG_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    touch <span style="color:#e6db74">&#34;</span>$LOG_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Notice that the timezone is set to MT. But you can adjust it.</span>
+</span></span><span style="display:flex;"><span>TIMESSTAMP<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>TZ<span style="color:#f92672">=</span>America/Edmonton date <span style="color:#e6db74">&#39;+%Y-%m-%d-%H:%M:%S&#39;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;</span>$TIMESSTAMP<span style="color:#e6db74"> git </span>$*<span style="color:#e6db74">&#34;</span> &gt;&gt; <span style="color:#e6db74">&#34;</span>$LOG_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># The path needs to match the output of `which git`</span>
+</span></span><span style="display:flex;"><span>/opt/homebrew/bin/git <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>@<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span></code></pre></div><p>This script will create a folder called <code>git-logs</code>, with a new log file for each day. It will intercept each Git command, log it, and then pass it on to the actual Git binary.</p>
+<p>Save this file as <code>git</code> (yes, without an extension) and ensure it is executable:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chmod +x git
+</span></span></code></pre></div><h3 id="update-the-path">Update the PATH</h3>
+<p>The final step is to update your <code>PATH</code>. This part can vary depending on which shell you&rsquo;re using. I use <a href="https://en.wikipedia.org/wiki/Z_shell">ZSH</a>, but if you&rsquo;re using <a href="https://en.wikipedia.org/wiki/Bash_(Unix_shell)">Bash</a> or another shell, there shouldn&rsquo;t be much difference.</p>
+<p>The important thing to note is that we want the path to our script to precede any other path that contains an executable file named <code>git</code>. So, in your <code>.zshrc</code> file, add the following line at the bottom of the file:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>export PATH<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/.scripts:</span>$PATH<span style="color:#e6db74">&#34;</span>
+</span></span></code></pre></div><p>This ensures that the path to <em>our</em> <code>git</code> file precedes <code>/opt/homebrew/bin</code>, <code>/usr/bin/git</code>, and so on. You could also place it at the top, but then there&rsquo;s a chance that something else could precede it by doing something like:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>export PATH<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/opt/homebrew/bin:</span>$PATH<span style="color:#e6db74">&#34;</span> ❌❌❌
+</span></span></code></pre></div><p>That&rsquo;s it! Simply re-run the terminal (or run <code>source ~/.zshrc</code>) to ensure your <code>PATH</code> is updated, and then try:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>which git
+</span></span></code></pre></div><p>It should output <code>~/.scripts/git</code>.</p>
 
 </article>
 
