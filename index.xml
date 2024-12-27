@@ -6,8 +6,15 @@
     <description>Recent content on Code &amp; Craft by Kasra</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 28 Sep 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 26 Dec 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://kasrababaei.com/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>2024 in Review</title>
+      <link>https://kasrababaei.com/posts/contributions-2024/</link>
+      <pubDate>Thu, 26 Dec 2024 00:00:00 +0000</pubDate>
+      <guid>https://kasrababaei.com/posts/contributions-2024/</guid>
+      <description>&lt;!-- markdownlint-disable no-inline-html --&gt;&#xA;&lt;p&gt;As the year comes to an end, I find it’s the perfect time to reflect on&#xA;my accomplishments and contributions in 2024. The year brought unexpected&#xA;twists, such as leaving &lt;a href=&#34;https://www.neofinancial.com&#34;&gt;Neo Financial&lt;/a&gt; and&#xA;embracing new challenges at &lt;a href=&#34;https://www.thescore.com&#34;&gt;theScore&lt;/a&gt;. While&#xA;I achieved several of my goals, a few others remain on my list for the future.&lt;/p&gt;&#xA;&lt;p&gt;Perhaps one of the most unforeseen and significant changes in 2024 was&#xA;my decision to leave Neo. I joined Neo Financial in early 2020, becoming&#xA;part of the iOS team alongside another developer, just one month apart.&#xA;I had the privilege of contributing to the team so early that I was&#xA;there to celebrate its very first release. Over nearly five years,&#xA;I truly enjoyed working with a team of&#xA;exceptionally talented engineers who dedicated their days and nights to&#xA;delivering a groundbreaking product, revolutionizing the banking experience&#xA;for Canadians. However, as difficult as it was, I began reflecting on my&#xA;personal goals and growth trajectory. Seeking a new project that would&#xA;push my boundaries and expose me to fresh challenges, I decided to&#xA;join the Platform team at &lt;em&gt;theScore&lt;/em&gt;.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>Adding a System-Wide Git Logger on macOS</title>
       <link>https://kasrababaei.com/posts/log-git-commands/</link>
@@ -27,7 +34,7 @@
       <link>https://kasrababaei.com/about/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>https://kasrababaei.com/about/</guid>
-      <description>&lt;p&gt;I&amp;rsquo;m a part-time comedian to a captivatingly stubborn red Pembroke Welsh Corgi named Ginger, full-time iOS developer, and master of multitasking between family and Swift syntax.&#xA;My iOS journey began in 2013 when I had to make a walking app for my Masters project. Learning Objective-C in just three months was tough, but I fell in love with app development right away.&#xA;After graduation, I made an expense-tracking app called &amp;ldquo;My Cost&amp;rdquo;. I maintained it for a while until I decided to pursue a Ph.D. in computer science, focusing on finding anomalies in big data with neural networks.&#xA;Throughout my tenure as a freelance iOS developer, I had the privilege of collaborating with various companies, taking &lt;a href=&#34;https://kasrababaei.com/projects/&#34;&gt;projects&lt;/a&gt; from conception to completion. Each app listed below represents a culmination of my skills, creativity, and dedication to delivering high-quality mobile experiences. While I&amp;rsquo;ve moved on from contractor work, the responsibility for maintaining these apps now rests with other developers.&#xA;In 2020, I made the leap to become a full-time iOS developer and joined Neo Financial, a company dedicated to revolutionizing the banking experience for Canadians.&lt;/p&gt;</description>
+      <description>&lt;!-- markdownlint-disable no-inline-html --&gt;&#xA;&lt;div class=&#34;inline-content&#34;&gt;&#xA;&lt;p&gt;I&amp;rsquo;m a part-time comedian to a captivating stubborn red Pembroke Welsh Corgi&#xA;named Ginger, full-time iOS developer, and master of multitasking between&#xA;family and Swift syntax.&lt;/p&gt;&#xA;&lt;img src=&#34;https://kasrababaei.com/images/Ginger.jpg&#34; alt=&#34;Ginger&#34;&gt;&#xA;&lt;p&gt;My journey as an iOS developer began in 2013 when I had to make an app for&#xA;pedestrians with routing features as part of my Masters project.&#xA;Learning Objective-C in just three months was tough, but I fell in&#xA;love with app development right away.&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>

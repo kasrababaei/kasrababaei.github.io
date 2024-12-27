@@ -6,8 +6,15 @@
     <description>Recent content in Posts on Code &amp; Craft by Kasra</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 28 Sep 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 26 Dec 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://kasrababaei.com/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>2024 in Review</title>
+      <link>https://kasrababaei.com/posts/contributions-2024/</link>
+      <pubDate>Thu, 26 Dec 2024 00:00:00 +0000</pubDate>
+      <guid>https://kasrababaei.com/posts/contributions-2024/</guid>
+      <description>&lt;!-- markdownlint-disable no-inline-html --&gt;&#xA;&lt;p&gt;As the year comes to an end, I find it’s the perfect time to reflect on&#xA;my accomplishments and contributions in 2024. The year brought unexpected&#xA;twists, such as leaving &lt;a href=&#34;https://www.neofinancial.com&#34;&gt;Neo Financial&lt;/a&gt; and&#xA;embracing new challenges at &lt;a href=&#34;https://www.thescore.com&#34;&gt;theScore&lt;/a&gt;. While&#xA;I achieved several of my goals, a few others remain on my list for the future.&lt;/p&gt;&#xA;&lt;p&gt;Perhaps one of the most unforeseen and significant changes in 2024 was&#xA;my decision to leave Neo. I joined Neo Financial in early 2020, becoming&#xA;part of the iOS team alongside another developer, just one month apart.&#xA;I had the privilege of contributing to the team so early that I was&#xA;there to celebrate its very first release. Over nearly five years,&#xA;I truly enjoyed working with a team of&#xA;exceptionally talented engineers who dedicated their days and nights to&#xA;delivering a groundbreaking product, revolutionizing the banking experience&#xA;for Canadians. However, as difficult as it was, I began reflecting on my&#xA;personal goals and growth trajectory. Seeking a new project that would&#xA;push my boundaries and expose me to fresh challenges, I decided to&#xA;join the Platform team at &lt;em&gt;theScore&lt;/em&gt;.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>Adding a System-Wide Git Logger on macOS</title>
       <link>https://kasrababaei.com/posts/log-git-commands/</link>

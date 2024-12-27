@@ -254,3 +254,38 @@ nav a {
 .copy-code-button:active {
   background-color: #D9D9D9;
 }
+
+.inline-content {
+  margin: auto;
+}
+
+.inline-content img {
+  float: right;
+  width: 30%;
+  margin-left: 10px;
+}
+
+.footer {
+  font-family: FontAwesome;
+  font-style: normal;
+  font-weight: normal;
+  text-align: center;
+  width: 100%;
+  margin: 0px;
+  padding-top: 10%;
+}
+
+/* Icon */
+ul.icons {
+  cursor: default;
+  list-style: none;
+}
+
+ul.icons li {
+  display: inline-block;
+  padding-right: 10px;
+}
+
+.icon > .label {
+  display: none;
+}
