@@ -6,8 +6,15 @@
     <description>Recent content on Code &amp; Craft by Kasra</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 26 Dec 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 31 Dec 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://kasrababaei.com/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Mutual Inclusion by Swift Concurrency</title>
+      <link>https://kasrababaei.com/posts/synchronization/</link>
+      <pubDate>Tue, 31 Dec 2024 00:00:00 +0000</pubDate>
+      <guid>https://kasrababaei.com/posts/synchronization/</guid>
+      <description>&lt;p&gt;Synchronization refers to the coordination of multiple threads of execution.&#xA;When accessing a shared object, it involves mechanisms to manage mutual&#xA;exclusion—where only one thread can access a critical section at a time—and&#xA;mutual inclusion—where multiple threads can access resources concurrently when&#xA;safe to do so.&lt;/p&gt;&#xA;&lt;p&gt;While using a mutex/lock makes it possible to provide exclusive access to a&#xA;shared mutable state/object, this mutual exclusion isn&amp;rsquo;t always ideal. In some&#xA;cases, multiple threads should be allowed to access the shared state as long&#xA;as some condition is valid.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>2024 in Review</title>
       <link>https://kasrababaei.com/posts/contributions-2024/</link>
