@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><title>Mutual Inclusion by Swift Concurrency | Code &amp; Craft by Kasra</title>
+<meta charset="utf-8">
+<meta name="generator" content="Hugo 0.135.0">
+<meta name="description" content="Synchronization refers to the coordination of multiple threads of execution. When accessing a shared mutable state, it involves mechanisms to manage mutual exclusion—where only one thread can access a critical section at a time—and mutual inclusion—where multiple threads are allowed to access resources concurrently when safe to do so.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="http://localhost:1313/css/index.css">
+<link rel="canonical" href="http://localhost:1313/posts/synchronization/">
+<link rel="alternate" type="application/rss+xml" href="" title="Code &amp; Craft by Kasra">
+
+<header>
+  
+    <a href="http://localhost:1313/" class="title">Code &amp; Craft by Kasra</a>
+  
+  
+    <nav>
+    
+      <a href="/">Blogs</a>
+    
+      <a href="/projects/">Projects</a>
+    
+      <a href="/about/">About Me</a>
+    
+    </nav>
+  
+</header>
+
+<article>
+  <header>
+    <h1>Mutual Inclusion by Swift Concurrency</h1>
+    <time datetime="2024-12-31T00:00:00Z">December 31, 2024</time>
+  </header>
+  <p>Synchronization refers to the coordination of multiple threads of execution.
+When accessing a shared object, it involves mechanisms to manage mutual
+exclusion—where only one thread can access a critical section at a time—and
+mutual inclusion—where multiple threads can access resources concurrently when
+safe to do so.</p>
+<p>While using a mutex/lock makes it possible to provide exclusive access to a
+shared mutable state/object, this mutual exclusion isn&rsquo;t always ideal. In some
+cases, multiple threads should be allowed to access the shared state as long
+as some condition is valid.</p>
+<p>In the following example, we have a <code>Sendable</code> object that is supposed to be
+accessed from multiple threads. While <code>condition</code> is true, accessing <code>count</code>
+should be possible. However, when it is false, other threads that want to
+access <code>count</code> should be blocked/suspended until the <code>condition</code> is toggled
+back to true.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">final</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">State</span>: Sendable {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">var</span> count: Int? {
+</span></span><span style="display:flex;"><span>    condition ? _count : <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Compile-time error: Stored property &#39;condition&#39; of &#39;Sendable&#39;-conforming</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// class &#39;State&#39; is mutable</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> condition = <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> _count = Int.random(<span style="color:#66d9ef">in</span>: <span style="color:#ae81ff">0.</span>..<span style="color:#ae81ff">10</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Actors are great for protecting encapsulated states. Therefore, the first step
+could be changing the <code>State</code> object to be an actor; this should fix the
+compile-time error.</p>
+<p>But this is a simple scenario where no asynchronous work is being done within
+the actor. In a more complicated case, we could be facing:</p>
+<ol>
+<li>Logic that sets the condition runs some asynchronous work.</li>
+<li>Instead of an optional integer, we want a required one. Instead of returning
+<code>nil</code>, we want the caller to be suspended until the <code>condition</code> is true.</li>
+</ol>
+<p>For instance, let&rsquo;s say the <code>State</code> contains the current market value of the
+<a href="https://www.vanguard.ca/en/product/etf/equity/9563/vanguard-sp-500-index-etf">S&amp;P 500 Index</a>,
+and we have an endpoint that returns the current market value. However, we
+want to implement a rate-limiting mechanism to avoid server overload. In other
+words, the value should be cached but refreshed every 60 seconds.</p>
+<p>Let&rsquo;s update our sample code by adding suspension and an async call for
+updating the price:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span>actor State {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> _price = <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> isOutdated: Bool { ContinuousClock.now <span style="color:#f92672">-</span> timestamp <span style="color:#f92672">&gt;</span> .seconds(<span style="color:#ae81ff">60</span>) }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> timestamp: ContinuousClock.Instant = .now
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">price</span>() async <span style="color:#66d9ef">throws</span> -&gt; Int {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> isOutdated {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">try</span>? await refresh()
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> _price
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">refresh</span>() async <span style="color:#66d9ef">throws</span> {
+</span></span><span style="display:flex;"><span>    _price = <span style="color:#66d9ef">try</span> await getCurrentMarketPrice()
+</span></span><span style="display:flex;"><span>    timestamp = ContinuousClock.now
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">getCurrentMarketPrice</span>() async <span style="color:#66d9ef">throws</span> -&gt; Int {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">try</span> await Task.sleep(nanoseconds: NSEC_PER_SEC <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (<span style="color:#ae81ff">100.</span>..<span style="color:#ae81ff">150</span>).randomElement() ?? <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The <code>refresh</code> call invokes <code>getCurrentMarketPrice</code>, which encapsulates the API
+call to the backend. At first, we might think this is all we need. However,
+there&rsquo;s still a race condition due to <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0306-actors.md#actor-reentrancy">actor reentrancy</a>.
+While one caller might be suspended for an <code>await</code> call within the actor, the
+actor isn&rsquo;t in a deadlock state, and another caller can execute work. In our
+scenario, that means <code>refresh</code> can be hit multiple times when we only need one
+API call to update the price. This case can get even more complicated when
+there are multiple <code>await</code> calls within <code>refresh</code>.</p>
+<p>One alternative is adding a second condition, like a boolean <code>isLoading</code>, in
+the code block below.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span>actor State {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> _price = <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> isLoading = <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> isOutdated: Bool { ContinuousClock.now <span style="color:#f92672">-</span> timestamp <span style="color:#f92672">&gt;</span> .seconds(<span style="color:#ae81ff">60</span>) }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> timestamp: ContinuousClock.Instant = .now
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">price</span>() async <span style="color:#66d9ef">throws</span> -&gt; Int {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> isOutdated {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> <span style="color:#f92672">!</span>isLoading {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Create a policy?</span>
+</span></span><span style="display:flex;"><span>      } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span>? await refresh()
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> _price
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">refresh</span>() async <span style="color:#66d9ef">throws</span> {
+</span></span><span style="display:flex;"><span>    isLoading = <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">defer</span> { isLoading = <span style="color:#66d9ef">false</span> }
+</span></span><span style="display:flex;"><span>    _price = <span style="color:#66d9ef">try</span> await getCurrentMarketPrice()
+</span></span><span style="display:flex;"><span>    timestamp = ContinuousClock.now
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">getCurrentMarketPrice</span>() async <span style="color:#66d9ef">throws</span> -&gt; Int {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">try</span> await Task.sleep(nanoseconds: NSEC_PER_SEC <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (<span style="color:#ae81ff">100.</span>..<span style="color:#ae81ff">150</span>).randomElement() ?? <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>However, this state machine lacks a mechanism to signal that the currently
+running API call is done. The logic also gets more complicated when we want to
+handle unforeseen errors.</p>
+<p>A better solution is to use a <a href="https://en.wikipedia.org/wiki/Monitor_(synchronization)#Condition_variables_2">Condition Variable</a>
+to signal suspended callers. This can be achieved with an optional <code>Task</code>,
+using its presence as a sign that a <code>refresh</code> call is running. If the state is
+outdated but the <code>Task</code> is <code>nil</code>, it can create a new <code>Task</code> while subsequent
+calls await its completion.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span>actor State {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> task: Task&lt;Void, Error&gt;?
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> isOutdated: Bool { ContinuousClock.now <span style="color:#f92672">-</span> timestamp <span style="color:#f92672">&gt;</span> .seconds(<span style="color:#ae81ff">60</span>) }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> timestamp: ContinuousClock.Instant = .now
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> _price = <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">price</span>() async <span style="color:#66d9ef">throws</span> -&gt; Int {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> isOutdated {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> task == <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> refresh()
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">try</span> await task?.value
+</span></span><span style="display:flex;"><span>      task = <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> _price
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">refresh</span>() <span style="color:#66d9ef">throws</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">guard</span> task == <span style="color:#66d9ef">nil</span> <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">RefreshError</span>: Error {}
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> RefreshError()
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    task = Task {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">let</span> price = <span style="color:#66d9ef">try</span> await getCurrentMarketPrice()
+</span></span><span style="display:flex;"><span>      timestamp = ContinuousClock.now
+</span></span><span style="display:flex;"><span>      _price = price
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">getCurrentMarketPrice</span>() async <span style="color:#66d9ef">throws</span> -&gt; Int {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">try</span> await Task.sleep(nanoseconds: NSEC_PER_SEC <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (<span style="color:#ae81ff">100.</span>..<span style="color:#ae81ff">150</span>).randomElement() ?? <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>In this solution, the <code>refresh</code> call is no longer an <code>async</code> function because
+the asynchronous work is wrapped inside a <code>Task</code> that returns <code>Void</code> but can
+throw an error. Additionally, the logic inside <code>price</code> ensures that a <code>refresh</code>
+is only invoked if the <code>task</code> is <code>nil</code>, indicating no ongoing API call. Once
+the <code>task</code> completes, its result is returned, and the <code>task</code> is reset to <code>nil</code>
+for future updates.</p>
+
+  <div class="footer">
+<ul class="icons">
+    <li><a href="https://github.com/kasrababaei" target="_blank" class="icon fa-github"><span class="label">Github</span></a></li>
+    <li><a href="https://twitter.com/kasra0000" target="_blank" class="icon fa-twitter"><span class="label">Twitter</span></a></li>
+    <li><a href="https://www.linkedin.com/in/kasra-babaei-5a44b286/" target="_blank" class="icon fa-linkedin"><span class="label">LinkedIn</span></a></li>
+</ul>
+<ul class="icons">
+    <li>Copyright <span class="fa-regular fa-copyright"></span> 2024 - 2025, Kasra Babaei</li>
+</ul>
+</div>
+</body>
+</html>
+
+</article>
+
+
+
+</html>
