@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<title>Making Weak References Thread-Safe in Swift with a Tiny Macro | Code &amp; Craft by Kasra</title>
+<meta charset="utf-8">
+<meta name="generator" content="Hugo 0.135.0">
+<meta name="description" content="Ever wanted to use `weak` delegates in a `Sendable` class without getting compiler errors? This package wraps them safely with a lock, so you can skip the `@MainActor` hammer.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://kasrababaei.com/css/index.css">
+<link rel="canonical" href="https://kasrababaei.com/posts/lockedweakreference/">
+<link rel="alternate" type="application/rss+xml" href="" title="Code &amp; Craft by Kasra">
+
+<header>
+  
+    <a href="https://kasrababaei.com/" class="title">Code &amp; Craft by Kasra</a>
+  
+  
+    <nav>
+    
+      <a href="/">Blogs</a>
+    
+      <a href="/projects/">Projects</a>
+    
+      <a href="/about/">About Me</a>
+    
+    </nav>
+  
+</header>
+
+<article>
+  <header>
+    <h1>Making Weak References Thread-Safe in Swift with a Tiny Macro</h1>
+    <time datetime="2025-08-25T21:41:54-04:00">August 25, 2025</time>
+  </header>
+  <!-- markdownlint-disable no-inline-html -->
+<p>If you’ve worked with delegates in Swift, you’ve almost certainly used <code>weak</code>
+references. They’re the go-to way to avoid retain cycles—but they come with a
+subtle catch: <strong>they’re not thread-safe</strong>.</p>
+<p>Now, in a lot of cases, that’s fine. If you only ever touch your delegate on the
+main thread, you’re safe. But what if you want to make your class <code>Sendable</code> and
+use it across multiple threads in Swift concurrency land? Suddenly, things get messy.</p>
+<h2 id="the-problem">The problem</h2>
+<p>Here’s a simple example:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">Foundation</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">final</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">APINetwork</span>: Sendable {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Stored property &#39;delegate&#39; of &#39;Sendable&#39;-conforming class &#39;APINetwork&#39;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// is mutable; this is an error in the Swift 6 language mode</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">weak</span> <span style="color:#66d9ef">var</span> delegate: URLSessionDelegate?
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Even though URLSessionDelegate itself conforms to <code>Sendable</code>, Swift yells at you.
+Why? Because that <code>weak</code> property is mutable and not thread-safe.</p>
+<p>At this point, you might be tempted to slap <code>@MainActor</code> on the <code>class</code> and call it a day.
+But that’s overkill—especially if your class doesn’t really need to be main-actor isolated.
+Worse, it forces every call site to also hop to the main actor. Not ideal.</p>
+<h2 id="the-solution">The solution</h2>
+<p>That’s where Locked Weak Reference comes in. It’s a tiny package I built that lets you wrap all
+your weak properties in a thread-safe container using a macro. Here’s what your code looks like
+with it:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">Foundation</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">LockedWeakReference</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>@LockedWeakReference
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">final</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">APINetwork</span>: Sendable {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">weak</span> <span style="color:#66d9ef">var</span> delegate: URLSessionDelegate?
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>That’s it. No weird boilerplate. No custom locks sprinkled all over your code.
+The macro finds all weak properties and wraps them in a safe, atomic type under
+the hood.</p>
+<p>If you peek at the expansion, you’ll see it’s doing the lock dance for you—so
+your weak reference is safe to read and write from multiple threads:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">Foundation</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">LockedWeakReference</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>@LockedWeakReference
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">final</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">APINetwork</span>: Sendable {
+</span></span><span style="display:flex;"><span>  @RegisterWeakReference
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">weak</span> <span style="color:#66d9ef">var</span> delegate: URLSessionDelegate?
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">get</span> {
+</span></span><span style="display:flex;"><span>        _delegate.withLock {
+</span></span><span style="display:flex;"><span>            $0 <span style="color:#66d9ef">as</span>? URLSessionDelegate
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">set</span> {
+</span></span><span style="display:flex;"><span>        _delegate.withLock {
+</span></span><span style="display:flex;"><span>            $0 = newValue
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">let</span> _delegate = LockedWeakReference()
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> <span style="color:#66d9ef">extension</span> <span style="color:#a6e22e">APINetwork</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">LockedWeakReference</span>: @unchecked Sendable {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">let</span> lock: NSLock = {
+</span></span><span style="display:flex;"><span>            NSLock()
+</span></span><span style="display:flex;"><span>        }()
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">private</span>(<span style="color:#66d9ef">set</span>) <span style="color:#66d9ef">weak</span> <span style="color:#66d9ef">var</span> value: AnyObject?
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">withLock</span>&lt;R&gt;(<span style="color:#66d9ef">_</span> body: (<span style="color:#66d9ef">inout</span> AnyObject?) <span style="color:#66d9ef">throws</span> -&gt; R) <span style="color:#66d9ef">rethrows</span> -&gt; R {
+</span></span><span style="display:flex;"><span>            lock.lock()
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">defer</span> {
+</span></span><span style="display:flex;"><span>                lock.unlock()
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">try</span> body(&amp;value)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="why-this-matters">Why this matters</h2>
+<p>The key benefit here is you can now confidently mark your classes as Sendable
+without having to mark them @MainActor unnecessarily. That means you avoid
+cascading main actor constraints to call sites that really don’t need them.</p>
+<p>It’s one of those small utilities that scratches a very specific itch—but if
+you’ve hit this problem, you know how annoying it can be.</p>
+<p>Check out the repo here: <a href="https://github.com/kasrababaei/locked-weak-reference">Locked Weak Reference on GitHub</a>.</p>
+
+  <div class="footer">
+<ul class="icons">
+    <li><a href="https://github.com/kasrababaei" target="_blank" class="icon fa-github"><span class="label">Github</span></a></li>
+    <li><a href="https://twitter.com/kasra0000" target="_blank" class="icon fa-twitter"><span class="label">Twitter</span></a></li>
+    <li><a href="https://www.linkedin.com/in/kasra-babaei-5a44b286/" target="_blank" class="icon fa-linkedin"><span class="label">LinkedIn</span></a></li>
+</ul>
+<ul class="icons">
+    <li>Copyright <span class="fa-regular fa-copyright"></span> 2024 - 2025, Kasra Babaei</li>
+</ul>
+</div>
+</body>
+</html>
+
+</article>
+
+
+
+</html>
