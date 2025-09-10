@@ -6,8 +6,15 @@
     <description>Recent content on Code &amp; Craft by Kasra</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 25 Aug 2025 21:41:54 -0400</lastBuildDate>
+    <lastBuildDate>Wed, 10 Sep 2025 15:29:17 -0400</lastBuildDate>
     <atom:link href="https://kasrababaei.com/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Service Locator in Swift: Resolving Protocol Implementations Without Extra Dependencies</title>
+      <link>https://kasrababaei.com/posts/resolve-protocol-implementation-at-runtime/</link>
+      <pubDate>Wed, 10 Sep 2025 15:29:17 -0400</pubDate>
+      <guid>https://kasrababaei.com/posts/resolve-protocol-implementation-at-runtime/</guid>
+      <description>&lt;!-- markdownlint-disable no-inline-html --&gt;&#xA;&lt;p&gt;As iOS projects grow, modularization is key to keeping builds fast and&#xA;dependencies clean. Modularization helps large iOS projects scale by&#xA;keeping code organized and &lt;strong&gt;speeding up incremental builds&lt;/strong&gt;.&#xA;When modules are isolated, small changes only rebuild what’s necessary, leading&#xA;to faster iteration and shorter feedback loops.&lt;/p&gt;&#xA;&lt;h2 id=&#34;problem&#34;&gt;Problem&lt;/h2&gt;&#xA;&lt;p&gt;Let&amp;rsquo;s say we&amp;rsquo;re building a Calculator app where the &lt;code&gt;CalculatorUI&lt;/code&gt; contains the&#xA;UI views and view models, and some of the view models depend on the business logic&#xA;(mathematic operations) that live in the &lt;code&gt;CalculatorBrain&lt;/code&gt;.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>Making Weak References Thread-Safe in Swift with a Tiny Macro</title>
       <link>https://kasrababaei.com/posts/lockedweakreference/</link>

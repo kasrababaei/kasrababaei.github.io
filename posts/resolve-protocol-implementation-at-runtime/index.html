@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<title>Service Locator in Swift: Resolving Protocol Implementations Without Extra Dependencies | Code &amp; Craft by Kasra</title>
+<meta charset="utf-8">
+<meta name="generator" content="Hugo 0.135.0">
+<meta name="description" content="In modular iOS projects, it’s common to separate interfaces and implementations. But when the interface and the implementation are not within the same module, you risk either circular dependencies or unnecessary rebuilds.
+Here’s how the Service Locator pattern with runtime resolution solves this problem and improves build times.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://kasrababaei.com/css/index.css">
+<link rel="canonical" href="https://kasrababaei.com/posts/resolve-protocol-implementation-at-runtime/">
+<link rel="alternate" type="application/rss+xml" href="" title="Code &amp; Craft by Kasra">
+
+<header>
+  
+    <a href="https://kasrababaei.com/" class="title">Code &amp; Craft by Kasra</a>
+  
+  
+    <nav>
+    
+      <a href="/">Blogs</a>
+    
+      <a href="/projects/">Projects</a>
+    
+      <a href="/about/">About Me</a>
+    
+    </nav>
+  
+</header>
+
+<article>
+  <header>
+    <h1>Service Locator in Swift: Resolving Protocol Implementations Without Extra Dependencies</h1>
+    <time datetime="2025-09-10T15:29:17-04:00">September 10, 2025</time>
+  </header>
+  <!-- markdownlint-disable no-inline-html -->
+<p>As iOS projects grow, modularization is key to keeping builds fast and
+dependencies clean. Modularization helps large iOS projects scale by
+keeping code organized and <strong>speeding up incremental builds</strong>.
+When modules are isolated, small changes only rebuild what’s necessary, leading
+to faster iteration and shorter feedback loops.</p>
+<h2 id="problem">Problem</h2>
+<p>Let&rsquo;s say we&rsquo;re building a Calculator app where the <code>CalculatorUI</code> contains the
+UI views and view models, and some of the view models depend on the business logic
+(mathematic operations) that live in the <code>CalculatorBrain</code>.</p>
+<div style="text-align:center"><figure><img src="/svgs/calculator-dep.svg">
+</figure>
+</div>
+<p>This separation means if something in the <code>CalculatorUI</code> gets updated, Xcode
+will only build that module and everything that depends on it (only the app
+target in this example).</p>
+<p>However, when the implementation of some method in <code>CalculatorBrain</code> changes,
+all the modules need to be rebuilt. At this point, some might create a new module
+called <code>AnyCalculatorBrain</code>, which only contains a public interface:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">protocol</span> <span style="color:#a6e22e">CalculatorBrainInterface</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">var</span> `<span style="color:#66d9ef">default</span>`: any CalculatorBrainInterface { <span style="color:#66d9ef">get</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">add</span>(<span style="color:#66d9ef">_</span> lhs: Double, <span style="color:#66d9ef">_</span> rhs: Double) -&gt; Double
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">subtract</span>(<span style="color:#66d9ef">_</span> lhs: Double, <span style="color:#66d9ef">_</span> rhs: Double) -&gt; Double
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">multiply</span>(<span style="color:#66d9ef">_</span> lhs: Double, <span style="color:#66d9ef">_</span> rhs: Double) -&gt; Double
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">divide</span>(<span style="color:#66d9ef">_</span> lhs: Double, <span style="color:#66d9ef">_</span> rhs: Double) -&gt; Double?
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div style="text-align:center"><figure><img src="/svgs/calculator-dep-b.svg">
+</figure>
+</div>
+<p>Next, <code>CalculatorBrain</code> could implement the methods; however, then the accessor
+to the default implementation needs to live inside <code>CalculatorBrain</code>, which
+means the dependency should be inverted, i.e., <code>CalculatorBrain</code> should depend on
+<code>AnyCalculatorBrain</code> in order to see the protocol. This means if the implementation
+changes, even though the interface hasn’t changed, all the modules need to be rebuilt.</p>
+<h2 id="solution">Solution</h2>
+<p>Ideally, we&rsquo;d like the dependencies to be as depicted below, where the default implementation
+depends on the interface; however, the accessor to the default implementation
+should live inside the interface module so that as long as the interface hasn’t changed,
+only the module with the default implementation gets rebuilt.</p>
+<div style="text-align:center"><figure><img src="/svgs/calculator-dep-c.svg">
+</figure>
+</div>
+<p>The problem is that unless <code>AnyCalculatorBrain</code> can see <code>CalculatorBrain</code>,
+it won’t be able to access the default implementation. However, adding
+<code>CalculatorBrain</code> as a dependency to <code>AnyCalculatorBrain</code> causes a circular
+dependency.</p>
+<p>The solution is to resolve the default implementation at runtime, without importing
+<code>CalculatorBrain</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">let</span> calculatorBrain: any CalculatorBrainInterface = {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> type = NSClassFromString(<span style="color:#e6db74">&#34;CalculatorBrain.DefaultCalculatorBrain&#34;</span>) <span style="color:#66d9ef">as</span>! CalculatorBrainInterface.<span style="color:#66d9ef">Type</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> type.<span style="color:#66d9ef">default</span>
+</span></span><span style="display:flex;"><span>}()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">protocol</span> <span style="color:#a6e22e">CalculatorBrainInterface</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">var</span> `<span style="color:#66d9ef">default</span>`: any CalculatorBrainInterface { <span style="color:#66d9ef">get</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">add</span>(<span style="color:#66d9ef">_</span> lhs: Double, <span style="color:#66d9ef">_</span> rhs: Double) -&gt; Double
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">subtract</span>(<span style="color:#66d9ef">_</span> lhs: Double, <span style="color:#66d9ef">_</span> rhs: Double) -&gt; Double
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">multiply</span>(<span style="color:#66d9ef">_</span> lhs: Double, <span style="color:#66d9ef">_</span> rhs: Double) -&gt; Double
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">divide</span>(<span style="color:#66d9ef">_</span> lhs: Double, <span style="color:#66d9ef">_</span> rhs: Double) -&gt; Double?
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>What’s happening here:</p>
+<ul>
+<li><code>NSClassFromString</code> looks up the type by its module and class name.</li>
+<li><code>CalculatorBrainInterface</code> doesn’t need to know about <code>CalculatorBrain</code>
+at compile time.</li>
+<li>The circular dependency disappears.</li>
+</ul>
+<p>This is the <strong><a href="https://en.wikipedia.org/wiki/Service_locator_pattern">Service Locator pattern</a></strong>:
+a central accessor (in this case, the interface) provides a service
+instance, while the actual implementation is discovered at runtime.</p>
+<h2 id="trade-offs">Trade-offs</h2>
+<p>This approach comes with both benefits and costs.</p>
+<h3 id="pros">Pros</h3>
+<ul>
+<li>🚀 Faster builds: implementation changes don’t trigger rebuilds of interface consumers.</li>
+<li>✅ Cleaner boundaries: interfaces remain stable and implementation details stay
+isolated.</li>
+<li>🔄 Flexibility: implementations can be swapped at runtime (e.g., for testing
+or feature flags).</li>
+</ul>
+<h3 id="cons">Cons</h3>
+<ul>
+<li>⚠️ Runtime safety: if the class name changes or isn’t linked, you’ll hit
+a runtime error.</li>
+<li>🛠 Weaker tooling: refactoring tools won’t catch typos in the string literal.
+Although this can be automated, for instance, by using project management
+tools such as XcodeGen, Tuist, or Bazel.</li>
+<li>⏱ Lookup overhead: reflection introduces a tiny runtime cost, though
+negligible in most cases.</li>
+</ul>
+
+  <div class="footer">
+<ul class="icons">
+    <li><a href="https://github.com/kasrababaei" target="_blank" class="icon fa-github"><span class="label">Github</span></a></li>
+    <li><a href="https://twitter.com/kasra0000" target="_blank" class="icon fa-twitter"><span class="label">Twitter</span></a></li>
+    <li><a href="https://www.linkedin.com/in/kasra-babaei-5a44b286/" target="_blank" class="icon fa-linkedin"><span class="label">LinkedIn</span></a></li>
+</ul>
+<ul class="icons">
+    <li>Copyright <span class="fa-regular fa-copyright"></span> 2024 - 2025, Kasra Babaei</li>
+</ul>
+</div>
+</body>
+</html>
+
+</article>
+
+
+
+</html>
