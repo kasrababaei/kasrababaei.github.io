@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en-us">
-<title>Service Locator in Swift: Resolving Protocol Implementations Without Extra Dependencies | Code &amp; Craft by Kasra</title>
+<title>Faster Builds by Resolving Protocol Implementations at Runtime | Code &amp; Craft by Kasra</title>
 <meta charset="utf-8">
 <meta name="generator" content="Hugo 0.135.0">
 <meta name="description" content="In modular iOS projects, it’s common to separate interfaces and implementations. But when the interface and the implementation are not within the same module, you risk either circular dependencies or unnecessary rebuilds.
@@ -29,7 +29,7 @@ Here’s how the Service Locator pattern with runtime resolution solves this pro
 
 <article>
   <header>
-    <h1>Service Locator in Swift: Resolving Protocol Implementations Without Extra Dependencies</h1>
+    <h1>Faster Builds by Resolving Protocol Implementations at Runtime</h1>
     <time datetime="2025-09-10T15:29:17-04:00">September 10, 2025</time>
   </header>
   <!-- markdownlint-disable no-inline-html -->
@@ -77,8 +77,11 @@ only the module with the default implementation gets rebuilt.</p>
 </div>
 <p>The problem is that unless <code>AnyCalculatorBrain</code> can see <code>CalculatorBrain</code>,
 it won’t be able to access the default implementation. However, adding
-<code>CalculatorBrain</code> as a dependency to <code>AnyCalculatorBrain</code> causes a circular
-dependency.</p>
+<code>CalculatorBrain</code> as a dependency to <code>AnyCalculatorBrain</code> causes a <a href="https://en.wikipedia.org/wiki/Circular_dependency">Circular
+Dependency</a> since now
+<code>CalculatorBrain</code> depends on <code>AnyCalculatorBrain</code> to see the protocol and
+<code>AnyCalculatorBrain</code> needs to import <code>CalculatorBrain</code> as a dependency to
+initialize and use the concrete type in its public accessor.</p>
 <p>The solution is to resolve the default implementation at runtime, without importing
 <code>CalculatorBrain</code>:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">let</span> calculatorBrain: any CalculatorBrainInterface = {
@@ -101,9 +104,27 @@ dependency.</p>
 at compile time.</li>
 <li>The circular dependency disappears.</li>
 </ul>
-<p>This is the <strong><a href="https://en.wikipedia.org/wiki/Service_locator_pattern">Service Locator pattern</a></strong>:
-a central accessor (in this case, the interface) provides a service
-instance, while the actual implementation is discovered at runtime.</p>
+<p>In other words, the process for getting the concrete type that conforms
+to the protocol is hidden.</p>
+<p>While there&rsquo;s various ways of doing dependency
+injection, many projects use a container-based approach, such as <a href="https://github.com/hmlongco/Factory">Factory</a>,
+where a central component is responsible for registering the abstractions
+and their concrete implementations. In some contexts, this is known as
+the <strong><a href="https://en.wikipedia.org/wiki/Service_locator_pattern">Service Locator pattern</a></strong>:</p>
+<blockquote>
+<p>A design pattern used in software development to encapsulate the processes
+involved in obtaining a service with a strong abstraction layer.</p>
+</blockquote>
+<p>Simply a central accessor, takes the abstraction (in this case, the protocol)
+as an argument and provides a service instance, while the actual
+implementation, thanks to <a href="https://developer.apple.com/documentation/foundation/nsclassfromstring(_:)">NSClassFromString(_:)</a>
+is discovered at runtime.</p>
+<p>Although this part is out of the scope of this article, the logic for
+obtaining the concrete type using <a href="https://developer.apple.com/documentation/foundation/nsclassfromstring(_:)">NSClassFromString(_:)</a>
+could be encapsulated by the container. Then, with some extra steps,
+could automate obtaining the string representation of the default
+implementation type&rsquo;s name and the module that contains it to
+eliminate the need for hardcoding it.</p>
 <h2 id="trade-offs">Trade-offs</h2>
 <p>This approach comes with both benefits and costs.</p>
 <h3 id="pros">Pros</h3>
