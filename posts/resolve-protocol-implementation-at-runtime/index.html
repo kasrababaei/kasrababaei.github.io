@@ -35,10 +35,13 @@ Here’s how the Service Locator pattern with runtime resolution solves this pro
   <!-- markdownlint-disable no-inline-html -->
 <p>As iOS projects grow, modularization is key to keeping builds fast and
 dependencies clean. Modularization helps large iOS projects scale by
-keeping code organized and <strong>speeding up incremental builds</strong>.
-When modules are isolated, small changes only rebuild what’s necessary, leading
-to faster iteration and shorter feedback loops.</p>
+keeping code organized, validating dependencies, for instance, logic modules
+shouldn&rsquo;t depend on UI modules, separated test suites, and <strong>speeding up
+incremental builds</strong>. When modules are isolated, small changes only
+rebuild what’s necessary, leading to faster iteration and shorter feedback loops.</p>
 <h2 id="problem">Problem</h2>
+<p>Although modularization solves a lot of issues, it requires a scalable
+dependency injection approach.</p>
 <p>Let&rsquo;s say we&rsquo;re building a Calculator app where the <code>CalculatorUI</code> contains the
 UI views and view models, and some of the view models depend on the business logic
 (mathematic operations) that live in the <code>CalculatorBrain</code>.</p>
@@ -115,6 +118,17 @@ the <strong><a href="https://en.wikipedia.org/wiki/Service_locator_pattern">Serv
 <p>A design pattern used in software development to encapsulate the processes
 involved in obtaining a service with a strong abstraction layer.</p>
 </blockquote>
+<p>This pattern has been adopted by many companies. For instance, the
+engineers at Lyft created a lightweight service locator which was <a href="https://www.youtube.com/watch?v=dA9rGQRwHGs">explained
+in details by Scott Berrevoets:</a></p>
+
+
+    
+    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+      <iframe allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen="allowfullscreen" loading="eager" referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube.com/embed/dA9rGQRwHGs?autoplay=0&controls=1&end=0&loop=0&mute=0&start=0" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" title="YouTube video"
+      ></iframe>
+    </div>
+
 <p>Simply a central accessor, takes the abstraction (in this case, the protocol)
 as an argument and provides a service instance, while the actual
 implementation, thanks to <a href="https://developer.apple.com/documentation/foundation/nsclassfromstring(_:)">NSClassFromString(_:)</a>
