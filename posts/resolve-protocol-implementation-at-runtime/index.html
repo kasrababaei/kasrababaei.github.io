@@ -93,6 +93,7 @@ the concrete type in its public accessor.</p>
 <code>CalculatorBrainInterface</code>:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">let</span> CalculatorBrainInterface: any CalculatorBrainInterface = {
 </span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> implementationType = NSClassFromString(<span style="color:#e6db74">&#34;CalculatorBrainImplementation.CalculatorBrainImplementation&#34;</span>) <span style="color:#66d9ef">as</span>! CalculatorBrainInterface.<span style="color:#66d9ef">Type</span>
+</span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> implementationType.<span style="color:#66d9ef">default</span>
 </span></span><span style="display:flex;"><span>}()
 </span></span><span style="display:flex;"><span>
@@ -108,7 +109,7 @@ the concrete type in its public accessor.</p>
 <ul>
 <li><code>NSClassFromString</code> looks up the type by its module and class name.</li>
 <li><code>CalculatorBrainInterface</code> doesn’t need to know about <code>CalculatorBrainImplementation</code>
-at compile time.</li>
+at compile time. It gets resolved at runtime.</li>
 <li>The circular dependency disappears.</li>
 </ul>
 <p>In other words, the process for getting the concrete type that conforms
