@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="390" height="250" viewBox="75 20 390 250" font-family="Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="450" height="250" viewBox="60 20 450 250" font-family="Arial, sans-serif">
   <defs>
     <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
       <polygon points="0 0, 10 3.5, 0 7" fill="#333"/>
@@ -19,16 +19,16 @@
   <!-- CalculatorUI (left middle) -->
   <rect x="80" y="120" width="160" height="50" rx="8" ry="8" class="box" fill="#2196F3"/>
   <text x="160" y="150" class="label">CalculatorUI</text>
-  <!-- CalculatorUI -> AnyCalculatorBrain -->
+  <!-- CalculatorUI -> DefaultCalculatorBrain -->
   <path class="arrow" d="M160,170 L160,170 L160,180 L160,220"/>
 
   <!-- CalculatorBrain -->
   <rect x="300" y="220" width="160" height="50" rx="8" ry="8" class="box" fill="#FF9800"/>
   <text x="380" y="250" class="label">CalculatorBrain</text>
 
-  <!-- AnyCalculatorBrain -->
-  <rect x="80" y="220" width="160" height="50" rx="8" ry="8" class="box" fill="#9C27B0"/>
-  <text x="160" y="250" class="label">AnyCalculatorBrain</text>
-  <!-- CalculatorBrain -> AnyCalculatorBrain -->
+  <!-- DefaultCalculatorBrain -->
+  <rect x="60" y="220" width="180" height="50" rx="8" ry="8" class="box" fill="#9C27B0"/>
+  <text x="150" y="250" class="label">DefaultCalculatorBrain</text>
+  <!-- CalculatorBrain -> DefaultCalculatorBrain -->
   <path class="arrow" d="M300,245 L240,245"/>
 </svg>
