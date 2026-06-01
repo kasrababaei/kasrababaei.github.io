@@ -44,16 +44,16 @@ rebuild what’s necessary, leading to faster iteration and shorter feedback loo
 dependency injection approach.</p>
 <p>Let&rsquo;s say we&rsquo;re building a Calculator app where the <code>CalculatorUI</code> contains the
 UI views and view models, and some of the view models depend on the business logic
-(mathematic operations) that live in the <code>CalculatorBrain</code>.</p>
+(mathematic operations) that live in the <code>CalculatorBrainInterface</code>.</p>
 <div style="text-align:center"><figure><img src="/svgs/calculator-dep.svg">
 </figure>
 </div>
 <p>This separation means if something in the <code>CalculatorUI</code> gets updated, Xcode
 will only build that module and everything that depends on it (only the app
 target in this example).</p>
-<p>However, when the implementation of some method in <code>CalculatorBrain</code> changes,
+<p>However, when the implementation of some method in <code>CalculatorBrainInterface</code> changes,
 all the modules need to be rebuilt. At this point, some might create a new module
-called <code>DefaultCalculatorBrain</code>, which only contains a public interface:</p>
+called <code>CalculatorBrainImplementation</code>, which only contains a public interface:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">protocol</span> <span style="color:#a6e22e">CalculatorBrainInterface</span> {
 </span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">var</span> `<span style="color:#66d9ef">default</span>`: any CalculatorBrainInterface { <span style="color:#66d9ef">get</span> }
 </span></span><span style="display:flex;"><span>
@@ -65,30 +65,34 @@ called <code>DefaultCalculatorBrain</code>, which only contains a public interfa
 </span></span></code></pre></div><div style="text-align:center"><figure><img src="/svgs/calculator-dep-b.svg">
 </figure>
 </div>
-<p>Next, <code>CalculatorBrain</code> could implement the methods; however, then the accessor
-to the default implementation needs to live inside <code>CalculatorBrain</code>, which
-means the dependency should be inverted, i.e., <code>CalculatorBrain</code> should depend on
-<code>DefaultCalculatorBrain</code> in order to see the protocol. This means if the implementation
+<p>Next, <code>CalculatorBrainImplementation</code> could implement the methods;
+however, then the accessor
+to the default implementation needs to live inside <code>CalculatorBrainInterface</code>, which
+means the dependency should be inverted, i.e., <code>CalculatorBrainInterface</code>
+should depend on
+<code>CalculatorBrainImplementation</code> in order to see the protocol.
+This means if the implementation
 changes, even though the interface hasn’t changed, all the modules need to be rebuilt.</p>
 <h2 id="solution">Solution</h2>
 <p>Ideally, we&rsquo;d like the dependencies to be as depicted below, where the default implementation
 depends on the interface; however, the accessor to the default implementation
-should live inside the interface module so that as long as the interface hasn’t changed,
-only the module with the default implementation gets rebuilt.</p>
+should live inside the interface module so that as long as the interface hasn’t
+changed, only the module with the default implementation gets rebuilt.</p>
 <div style="text-align:center"><figure><img src="/svgs/calculator-dep-c.svg">
 </figure>
 </div>
-<p>The problem is that unless <code>DefaultCalculatorBrain</code> can see <code>CalculatorBrain</code>,
+<p>The problem is that unless <code>CalculatorBrainImplementation</code> can see <code>CalculatorBrainInterface</code>,
 it won’t be able to access the default implementation. However, adding
-<code>CalculatorBrain</code> as a dependency to <code>DefaultCalculatorBrain</code> causes a <a href="https://en.wikipedia.org/wiki/Circular_dependency">Circular
-Dependency</a> since now
-<code>CalculatorBrain</code> depends on <code>DefaultCalculatorBrain</code> to see the protocol and
-<code>DefaultCalculatorBrain</code> needs to import <code>CalculatorBrain</code> as a dependency to
-initialize and use the concrete type in its public accessor.</p>
+<code>CalculatorBrainInterface</code> as a dependency to <code>CalculatorBrainImplementation</code>
+causes a <a href="https://en.wikipedia.org/wiki/Circular_dependency">Circular Dependency</a>
+since now <code>CalculatorBrainInterface</code> depends on <code>CalculatorBrainImplementation</code>
+to see the protocol and <code>CalculatorBrainImplementation</code> needs to
+import <code>CalculatorBrainInterface</code> as a dependency to initialize and use
+the concrete type in its public accessor.</p>
 <p>The solution is to resolve the default implementation at runtime, without importing
-<code>CalculatorBrain</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">let</span> calculatorBrain: any CalculatorBrainInterface = {
-</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> implementationType = NSClassFromString(<span style="color:#e6db74">&#34;DefaultCalculatorBrain.DefaultCalculatorBrain&#34;</span>) <span style="color:#66d9ef">as</span>! CalculatorBrainInterface.<span style="color:#66d9ef">Type</span>
+<code>CalculatorBrainInterface</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">let</span> CalculatorBrainInterface: any CalculatorBrainInterface = {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> implementationType = NSClassFromString(<span style="color:#e6db74">&#34;CalculatorBrainImplementation.CalculatorBrainImplementation&#34;</span>) <span style="color:#66d9ef">as</span>! CalculatorBrainInterface.<span style="color:#66d9ef">Type</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> implementationType.<span style="color:#66d9ef">default</span>
 </span></span><span style="display:flex;"><span>}()
 </span></span><span style="display:flex;"><span>
@@ -103,7 +107,7 @@ initialize and use the concrete type in its public accessor.</p>
 </span></span></code></pre></div><p>What’s happening here:</p>
 <ul>
 <li><code>NSClassFromString</code> looks up the type by its module and class name.</li>
-<li><code>CalculatorBrainInterface</code> doesn’t need to know about <code>CalculatorBrain</code>
+<li><code>CalculatorBrainInterface</code> doesn’t need to know about <code>CalculatorBrainImplementation</code>
 at compile time.</li>
 <li>The circular dependency disappears.</li>
 </ul>
